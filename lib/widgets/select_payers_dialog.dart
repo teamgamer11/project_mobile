@@ -1,12 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart'; // Add this import
 
 void showSelectPayersDialog(BuildContext context, String expenseId, List<dynamic> currentSharedUsers) {
+  final String uid = FirebaseAuth.instance.currentUser!.uid; // Get current user's UID
+
   showDialog(
     context: context,
     builder: (context) {
       return StreamBuilder(
-        stream: FirebaseFirestore.instance.collection('users').snapshots(),
+        stream: FirebaseFirestore.instance.collection('users').where('uid', isEqualTo: uid).snapshots(), // Filter by UID
         builder: (context, AsyncSnapshot<QuerySnapshot> userSnapshot) {
           if (!userSnapshot.hasData) return Center(child: CircularProgressIndicator());
 
