@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:project_mobile/services/auth_service.dart';
 
 void showAddPersonDialog(BuildContext context) {
+  final AuthService _authService = AuthService();
   String name = '';
   final formKey = GlobalKey<FormState>();
 
@@ -45,6 +47,7 @@ void showAddPersonDialog(BuildContext context) {
               FirebaseFirestore.instance.collection('users').add({
                 'name': name,
                 'timestamp': FieldValue.serverTimestamp(),
+                'addedBy': _authService.currentUserUid,
               });
               Navigator.pop(context);
             }

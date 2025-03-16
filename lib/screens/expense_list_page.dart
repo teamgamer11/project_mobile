@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:project_mobile/services/auth_service.dart';
 import '../widgets/select_payers_dialog.dart';
 import 'package:intl/intl.dart';
 
 class ExpenseListPage extends StatelessWidget {
   final currencyFormat = NumberFormat.currency(locale: 'en_US', symbol: '\$');
+  final AuthService _authService = AuthService();
 
   @override
   Widget build(BuildContext context) {

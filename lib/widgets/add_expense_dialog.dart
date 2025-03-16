@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:project_mobile/services/auth_service.dart';
 
 void showAddExpenseDialog(BuildContext context) {
+  final AuthService _authService = AuthService();
   String itemName = '';
   String price = '';
   final formKey = GlobalKey<FormState>();
@@ -71,6 +73,7 @@ void showAddExpenseDialog(BuildContext context) {
                 'price': double.tryParse(price) ?? 0.0,
                 'sharedUsers': [],
                 'timestamp': FieldValue.serverTimestamp(),
+                'createdBy': _authService.currentUserUid,
               });
               Navigator.pop(context);
             }

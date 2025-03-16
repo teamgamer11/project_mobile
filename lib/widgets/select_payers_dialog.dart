@@ -1,12 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import '../services/auth_service.dart';
 
 void showSelectPayersDialog(BuildContext context, String expenseId, List<dynamic> currentSharedUsers) {
+  final AuthService _authService = AuthService();
+
   showDialog(
     context: context,
     builder: (context) {
       return StreamBuilder(
-        stream: FirebaseFirestore.instance.collection('users').snapshots(),
+        stream: FirebaseFirestore.instance.collection('users').where('addedBy', isEqualTo: _authService.currentUserUid).snapshots(),
         builder: (context, AsyncSnapshot<QuerySnapshot> userSnapshot) {
           if (!userSnapshot.hasData) 
             return AlertDialog(

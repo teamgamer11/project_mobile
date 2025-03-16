@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:project_mobile/services/auth_service.dart';
 
 class PeopleListPage extends StatelessWidget {
+  final AuthService _authService = AuthService();
   @override
   Widget build(BuildContext context) {
     return StreamBuilder(
-      stream: FirebaseFirestore.instance.collection('users').snapshots(),
+      stream: FirebaseFirestore.instance.collection('users').where('addedBy', isEqualTo: _authService.currentUserUid).snapshots(),
       builder: (context, AsyncSnapshot<QuerySnapshot> snapshot) {
         if (!snapshot.hasData)
           return Center(
