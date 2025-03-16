@@ -1,37 +1,56 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart'; // Add this import
 
 void showAddPersonDialog(BuildContext context) {
   String name = '';
-  final String uid =
-      FirebaseAuth.instance.currentUser!.uid; // Get current user's UID
+  final formKey = GlobalKey<FormState>();
 
   showDialog(
     context: context,
-    builder:
-        (context) => AlertDialog(
-          title: Text("Add Person"),
-          content: TextField(
-            decoration: InputDecoration(labelText: "Name"),
-            onChanged: (value) => name = value,
+    builder: (context) => AlertDialog(
+      title: Row(
+        children: [
+          Icon(Icons.person_add, color: Colors.teal),
+          SizedBox(width: 10),
+          Text("Add Person"),
+        ],
+      ),
+      content: Form(
+        key: formKey,
+        child: TextFormField(
+          autofocus: true,
+          decoration: InputDecoration(
+            labelText: "Name",
+            prefixIcon: Icon(Icons.person),
           ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: Text("Cancel"),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                FirebaseFirestore.instance.collection('users').add({
-                  'name': name,
-                  'uid': uid, // Add UID to the document
-                });
-                Navigator.pop(context);
-              },
-              child: Text("Add"),
-            ),
-          ],
+          validator: (value) {
+            if (value == null || value.isEmpty) {
+              return 'Please enter a name';
+            }
+            return null;
+          },
+          onChanged: (value) => name = value,
         ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: Text("Cancel"),
+        ),
+        ElevatedButton.icon(
+          icon: Icon(Icons.add),
+          label: Text("Add"),
+          onPressed: () {
+            if (formKey.currentState!.validate()) {
+              FirebaseFirestore.instance.collection('users').add({
+                'name': name,
+                'timestamp': FieldValue.serverTimestamp(),
+              });
+              Navigator.pop(context);
+            }
+          },
+        ),
+      ],
+    ),
   );
 }

@@ -1,50 +1,82 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart'; // Add this import
 
 void showAddExpenseDialog(BuildContext context) {
   String itemName = '';
   String price = '';
-  final String uid =
-      FirebaseAuth.instance.currentUser!.uid; // Get current user's UID
+  final formKey = GlobalKey<FormState>();
 
   showDialog(
     context: context,
-    builder:
-        (context) => AlertDialog(
-          title: Text("Add Expense"),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(
-                decoration: InputDecoration(labelText: "Item Name"),
-                onChanged: (value) => itemName = value,
+    builder: (context) => AlertDialog(
+      title: Row(
+        children: [
+          Icon(Icons.receipt, color: Colors.teal),
+          SizedBox(width: 10),
+          Text("Add Expense"),
+        ],
+      ),
+      content: Form(
+        key: formKey,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextFormField(
+              autofocus: true,
+              decoration: InputDecoration(
+                labelText: "Item Name",
+                prefixIcon: Icon(Icons.shopping_bag),
               ),
-              TextField(
-                decoration: InputDecoration(labelText: "Price"),
-                keyboardType: TextInputType.number,
-                onChanged: (value) => price = value,
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: Text("Cancel"),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                FirebaseFirestore.instance.collection('expenses').add({
-                  'item': itemName,
-                  'price': double.tryParse(price) ?? 0.0,
-                  'sharedUsers': [],
-                  'uid': uid, // Add UID to the document
-                });
-                Navigator.pop(context);
+              validator: (value) {
+                if (value == null || value.isEmpty) {
+                  return 'Please enter an item name';
+                }
+                return null;
               },
-              child: Text("Add"),
+              onChanged: (value) => itemName = value,
+            ),
+            SizedBox(height: 16),
+            TextFormField(
+              decoration: InputDecoration(
+                labelText: "Price",
+                prefixIcon: Icon(Icons.attach_money),
+              ),
+              keyboardType: TextInputType.numberWithOptions(decimal: true),
+              validator: (value) {
+                if (value == null || value.isEmpty) {
+                  return 'Please enter a price';
+                }
+                if (double.tryParse(value) == null) {
+                  return 'Please enter a valid number';
+                }
+                return null;
+              },
+              onChanged: (value) => price = value,
             ),
           ],
         ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: Text("Cancel"),
+        ),
+        ElevatedButton.icon(
+          icon: Icon(Icons.add),
+          label: Text("Add"),
+          onPressed: () {
+            if (formKey.currentState!.validate()) {
+              FirebaseFirestore.instance.collection('expenses').add({
+                'item': itemName,
+                'price': double.tryParse(price) ?? 0.0,
+                'sharedUsers': [],
+                'timestamp': FieldValue.serverTimestamp(),
+              });
+              Navigator.pop(context);
+            }
+          },
+        ),
+      ],
+    ),
   );
 }

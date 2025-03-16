@@ -1,17 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart'; // Add this import
 
 void showSelectPayersDialog(BuildContext context, String expenseId, List<dynamic> currentSharedUsers) {
-  final String uid = FirebaseAuth.instance.currentUser!.uid; // Get current user's UID
-
   showDialog(
     context: context,
     builder: (context) {
       return StreamBuilder(
-        stream: FirebaseFirestore.instance.collection('users').where('uid', isEqualTo: uid).snapshots(), // Filter by UID
+        stream: FirebaseFirestore.instance.collection('users').snapshots(),
         builder: (context, AsyncSnapshot<QuerySnapshot> userSnapshot) {
-          if (!userSnapshot.hasData) return Center(child: CircularProgressIndicator());
+          if (!userSnapshot.hasData) 
+            return AlertDialog(
+              content: Center(
+                child: CircularProgressIndicator(),
+              ),
+            );
 
           List<QueryDocumentSnapshot> users = userSnapshot.data!.docs;
           Map<String, bool> selectedUsers = {
@@ -20,41 +22,91 @@ void showSelectPayersDialog(BuildContext context, String expenseId, List<dynamic
 
           return StatefulBuilder(
             builder: (context, setState) {
+              int selectedCount = selectedUsers.values.where((v) => v).length;
+              
               return AlertDialog(
-                title: Text("Select Who Shares"),
-                content: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: users.map((userDoc) {
-                    return CheckboxListTile(
-                      title: Text(userDoc['name']),
-                      value: selectedUsers[userDoc.id] ?? false,
-                      onChanged: (bool? value) {
-                        setState(() {
-                          selectedUsers[userDoc.id] = value!;
-                        });
-                      },
-                    );
-                  }).toList(),
+                title: Row(
+                  children: [
+                    Icon(Icons.people, color: Colors.teal),
+                    SizedBox(width: 10),
+                    Expanded(child: Text("Select Who Shares")),
+                  ],
+                ),
+                content: Container(
+                  width: double.maxFinite,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        "$selectedCount ${selectedCount == 1 ? 'person' : 'people'} selected",
+                        style: TextStyle(
+                          color: Colors.grey[600],
+                          fontStyle: FontStyle.italic,
+                        ),
+                      ),
+                      SizedBox(height: 8),
+                      Divider(),
+                      ConstrainedBox(
+                        constraints: BoxConstraints(
+                          maxHeight: MediaQuery.of(context).size.height * 0.4,
+                        ),
+                        child: ListView.builder(
+                          shrinkWrap: true,
+                          itemCount: users.length,
+                          itemBuilder: (context, index) {
+                            var userDoc = users[index];
+                            return CheckboxListTile(
+                              title: Text(
+                                userDoc['name'],
+                                style: TextStyle(fontWeight: FontWeight.bold),
+                              ),
+                              value: selectedUsers[userDoc.id] ?? false,
+                              activeColor: Colors.teal,
+                              onChanged: (bool? value) {
+                                setState(() {
+                                  selectedUsers[userDoc.id] = value!;
+                                });
+                              },
+                              secondary: CircleAvatar(
+                                backgroundColor: Colors.teal[100],
+                                child: Text(
+                                  userDoc['name'][0].toUpperCase(),
+                                  style: TextStyle(
+                                    color: Colors.teal[700],
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
                 actions: [
                   TextButton(
                     onPressed: () => Navigator.pop(context),
                     child: Text("Cancel"),
                   ),
-                  ElevatedButton(
+                  ElevatedButton.icon(
+                    icon: Icon(Icons.save),
+                    label: Text("Save"),
                     onPressed: () {
                       List<String> newSharedUsers = selectedUsers.entries
                           .where((entry) => entry.value)
                           .map((entry) => entry.key)
                           .toList();
 
-                      FirebaseFirestore.instance.collection('expenses').doc(expenseId).update({
+                      FirebaseFirestore.instance
+                          .collection('expenses')
+                          .doc(expenseId)
+                          .update({
                         'sharedUsers': newSharedUsers,
                       });
 
                       Navigator.pop(context);
                     },
-                    child: Text("Save"),
                   ),
                 ],
               );

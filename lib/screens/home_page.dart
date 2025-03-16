@@ -14,47 +14,90 @@ class ExpenseHomePage extends StatefulWidget {
 class _ExpenseHomePageState extends State<ExpenseHomePage> {
   int _selectedIndex = 0;
   final List<Widget> _pages = [ExpenseListPage(), PeopleListPage()];
+  final List<String> _titles = ["Expenses", "People"];
 
   void _onItemTapped(int index) {
     setState(() => _selectedIndex = index);
   }
+
   void _logout() async {
-    await AuthService().signOut();
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(builder: (context) => LoginScreen()),
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text("Logout"),
+        content: Text("Are you sure you want to logout?"),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text("Cancel"),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              Navigator.pop(context);
+              await AuthService().signOut();
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(builder: (context) => LoginScreen()),
+              );
+            },
+            child: Text("Logout"),
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+          ),
+        ],
+      ),
     );
   }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Group Expense Splitter'),
-        automaticallyImplyLeading: false,
+        title: Text(
+          _titles[_selectedIndex],
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
+        elevation: 0,
+        centerTitle: true,
         actions: [
           IconButton(
-            icon: Icon(Icons.logout),  
-            onPressed: _logout
+            icon: Icon(Icons.logout),
+            onPressed: _logout,
+            tooltip: "Logout",
           ),
         ],
       ),
-      body: _pages[_selectedIndex],
+      body: Container(
+        color: Colors.grey[50],
+        child: _pages[_selectedIndex],
+      ),
       bottomNavigationBar: BottomNavigationBar(
         items: [
-          BottomNavigationBarItem(icon: Icon(Icons.shopping_cart), label: "Expenses"),
-          BottomNavigationBarItem(icon: Icon(Icons.people), label: "People"),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.receipt_long),
+            label: "Expenses",
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.people),
+            label: "People",
+          ),
         ],
         currentIndex: _selectedIndex,
         onTap: _onItemTapped,
+        selectedItemColor: Colors.teal,
+        unselectedItemColor: Colors.grey,
+        showUnselectedLabels: true,
       ),
-      floatingActionButton: FloatingActionButton(
-        child: Icon(Icons.add),
+      floatingActionButton: FloatingActionButton.extended(
+        icon: Icon(Icons.add),
+        label: Text(_selectedIndex == 0 ? "Add Expense" : "Add Person"),
+        backgroundColor: Colors.teal,
         onPressed: () {
           _selectedIndex == 0
               ? showAddExpenseDialog(context)
               : showAddPersonDialog(context);
         },
       ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
     );
   }
 }
